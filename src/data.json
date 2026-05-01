@@ -1,0 +1,82 @@
+{
+  "Drawings": {
+    "Architectural": [
+      {
+        "fileName": "Floor Plan",
+        "date": "2024-12-01",
+        "fileCode": "ARCH-001",
+        "imgSrc": "https://via.placeholder.com/150"
+      },
+      {
+        "fileName": "Elevation",
+        "date": "2024-12-02",
+        "fileCode": "ARCH-002",
+        "imgSrc": "https://via.placeholder.com/150"
+      }
+    ],
+    "Electrical": [
+      {
+        "fileName": "Wiring Diagram",
+        "date": "2024-11-30",
+        "fileCode": "ELEC-001",
+        "imgSrc": "https://via.placeholder.com/150"
+      },
+      {
+        "fileName": "Panel Layout",
+        "date": "2024-12-03",
+        "fileCode": "ELEC-002",
+        "imgSrc": "https://via.placeholder.com/150"
+      }
+    ],
+    "General": [
+      {
+        "fileName": "Project Overview",
+        "date": "2024-12-05",
+        "fileCode": "GEN-001",
+        "imgSrc": "https://via.placeholder.com/150"
+      }
+    ]
+  },
+  "Inspections": [
+    {
+      "fileName": "Foundation Check",
+      "date": "2024-12-06",
+      "fileCode": "INSP-001",
+      "imgSrc": "https://via.placeholder.com/150"
+    },
+    {
+      "fileName": "Final Inspection",
+      "date": "2024-12-07",
+      "fileCode": "INSP-002",
+      "imgSrc": "https://via.placeholder.com/150"
+    }
+  ],
+  "Observations": [
+    {
+      "fileName": "Crack on Wall",
+      "date": "2024-12-04",
+      "fileCode": "OBS-001",
+      "imgSrc": "https://via.placeholder.com/150"
+    },
+    {
+      "fileName": "Water Leakage",
+      "date": "2024-12-08",
+      "fileCode": "OBS-002",
+      "imgSrc": "https://via.placeholder.com/150"
+    }
+  ],
+  "Photos": [
+    {
+      "fileName": "Site Photo 1",
+      "date": "2024-12-01",
+      "fileCode": "PHOTO-001",
+      "imgSrc": "https://via.placeholder.com/150"
+    },
+    {
+      "fileName": "Site Photo 2",
+      "date": "2024-12-02",
+      "fileCode": "PHOTO-002",
+      "imgSrc": "https://via.placeholder.com/150"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+# =========================================================================
+# TALIHO V3 - LOCAL INTEGRATION TEST INFRASTRUCTURE
+# =========================================================================
+#
+# This docker-compose file provides MongoDB infrastructure
+# used in the local integration testing workflow.
+#
+# Usage:
+#   docker-compose -f docker-compose.integration.yml up -d     # Start services
+#   docker-compose -f docker-compose.integration.yml down -v   # Stop and remove volumes
+#   docker-compose -f docker-compose.integration.yml logs -f   # View logs
+#
+# Or use the integration test scripts:
+#   ./scripts/run-integration-local.sh    (Bash/Git Bash/WSL)
+#   .\scripts\run-integration-local.ps1   (PowerShell)
+#
+# =========================================================================
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: taliho-mongodb
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: mongosh --eval 'db.runCommand({ping:1})' --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: taliho-integration
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    name: taliho-integration-mongodb
+
+networks:
+  default:
+    name: taliho-integration-network

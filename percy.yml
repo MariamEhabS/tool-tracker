@@ -1,0 +1,19 @@
+version: 2
+snapshot:
+  widths:
+    - 375 # iPhone SE
+    - 393 # iPhone 14 Pro
+    - 412 # Pixel 7
+  min-height: 1024
+  percy-css: |
+    /* Hide dynamic content that causes false positives */
+    [data-testid="timestamp"] { visibility: hidden; }
+    .animate-spin { animation: none !important; }
+    /* Stabilize animations for consistent snapshots */
+    *, *::before, *::after {
+      animation-duration: 0s !important;
+      transition-duration: 0s !important;
+    }
+
+discovery:
+  network-idle-timeout: 500

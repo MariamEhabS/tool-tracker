@@ -1,0 +1,508 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@theme {
+  /* Brand palette aliased to yellow */
+  --color-brand-50: var(--color-yellow-50);
+  --color-brand-100: var(--color-yellow-100);
+  --color-brand-200: var(--color-yellow-200);
+  --color-brand-300: var(--color-yellow-300);
+  --color-brand-400: var(--color-yellow-400);
+  --color-brand-500: var(--color-yellow-500);
+  --color-brand-600: var(--color-yellow-600);
+  --color-brand-700: var(--color-yellow-700);
+  --color-brand-800: var(--color-yellow-800);
+  --color-brand-900: var(--color-yellow-900);
+  /* DEFAULT enables classes like bg-brand, text-brand, ring-brand */
+  --color-brand: var(--color-brand-500);
+
+  /* Optional semantic aliases if needed later */
+  --color-accent-50: var(--color-orange-50);
+  --color-accent-100: var(--color-orange-100);
+  --color-accent-200: var(--color-orange-200);
+  --color-accent-300: var(--color-orange-300);
+  --color-accent-400: var(--color-orange-400);
+  --color-accent-500: var(--color-orange-500);
+  --color-accent-600: var(--color-orange-600);
+  --color-accent-700: var(--color-orange-700);
+  --color-accent-800: var(--color-orange-800);
+  --color-accent-900: var(--color-orange-900);
+  --color-accent: var(--color-accent-500);
+
+  --color-info-50: var(--color-blue-50);
+  --color-info-100: var(--color-blue-100);
+  --color-info-500: var(--color-blue-500);
+  --color-info-600: var(--color-blue-600);
+  --color-info-700: var(--color-blue-700);
+  --color-info-800: var(--color-blue-800);
+  --color-info: var(--color-info-500);
+
+  --color-success-50: var(--color-green-50);
+  --color-success-100: var(--color-green-100);
+  --color-success-500: var(--color-green-500);
+  --color-success-600: var(--color-green-600);
+  --color-success-700: var(--color-green-700);
+  --color-success-800: var(--color-green-800);
+  --color-success: var(--color-success-600);
+
+  --color-warning-50: var(--color-yellow-50);
+  --color-warning-100: var(--color-yellow-100);
+  --color-warning-400: var(--color-yellow-400);
+  --color-warning-500: var(--color-yellow-500);
+  --color-warning-600: var(--color-yellow-600);
+  --color-warning-700: var(--color-yellow-700);
+  --color-warning-800: var(--color-yellow-800);
+  --color-warning: var(--color-warning-500);
+
+  --color-danger-50: var(--color-red-50);
+  --color-danger-100: var(--color-red-100);
+  --color-danger-400: var(--color-red-400);
+  --color-danger-500: var(--color-red-500);
+  --color-danger-600: var(--color-red-600);
+  --color-danger-700: var(--color-red-700);
+  --color-danger-800: var(--color-red-800);
+  --color-danger: var(--color-danger-600);
+}
+
+@layer layout {
+  .grid-col-fluid {
+    grid-template-columns: repeat(auto-fit, minmax(20ch, 1fr));
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Multi-line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+/* Override @tailwindcss/forms plugin focus styles to prevent double rings */
+input:focus,
+select:focus,
+textarea:focus {
+  --tw-ring-color: transparent;
+  --tw-ring-shadow: none;
+  box-shadow: none;
+}
+
+/* Global focus-visible styles for keyboard navigation accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500, #eab308);
+  outline-offset: 2px;
+}
+
+/* Remove default focus ring for mouse users while keeping focus-visible for keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Ensure buttons and interactive elements have visible focus states */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-brand-500, #eab308);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Form elements: use border color change instead of outline to avoid double ring */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-brand-500, #eab308);
+  --tw-ring-color: transparent;
+  box-shadow: none;
+}
+
+/* High contrast focus ring for dark backgrounds (sidebar) */
+.bg-gray-900 :focus-visible,
+.bg-gray-800 :focus-visible {
+  outline-color: var(--color-brand-400, #facc15);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+[data-tab-content] {
+  transition: opacity 0.3s ease-in-out;
+}
+[data-tab-content].hidden {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  display: inline-block;
+  position: relative;
+  transform: rotate(45deg);
+}
+.loader::before {
+  content: "";
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  left: 0;
+  top: -24px;
+  animation: animloader 4s ease infinite;
+}
+.loader::after {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  animation: animloader2 2s ease infinite;
+}
+
+@keyframes animloader {
+  0% {
+    box-shadow:
+      0 24px #101828,
+      24px 24px #101828,
+      24px 48px #101828,
+      0px 48px #101828;
+  }
+  12% {
+    box-shadow:
+      0 24px #fcc800,
+      24px 24px #101828,
+      24px 48px #101828,
+      0px 48px #101828;
+  }
+  25% {
+    box-shadow:
+      0 24px #fcc800,
+      24px 24px #fcc800,
+      24px 48px #101828,
+      0px 48px #101828;
+  }
+  37% {
+    box-shadow:
+      0 24px #fcc800,
+      24px 24px #fcc800,
+      24px 48px #fcc800,
+      0px 48px #101828;
+  }
+  50% {
+    box-shadow:
+      0 24px #fcc800,
+      24px 24px #fcc800,
+      24px 48px #fcc800,
+      0px 48px #fcc800;
+  }
+  62% {
+    box-shadow:
+      0 24px #101828,
+      24px 24px #fcc800,
+      24px 48px #fcc800,
+      0px 48px #fcc800;
+  }
+  75% {
+    box-shadow:
+      0 24px #101828,
+      24px 24px #101828,
+      24px 48px #fcc800,
+      0px 48px #fcc800;
+  }
+  87% {
+    box-shadow:
+      0 24px #101828,
+      24px 24px #101828,
+      24px 48px #101828,
+      0px 48px #fcc800;
+  }
+  100% {
+    box-shadow:
+      0 24px #101828,
+      24px 24px #101828,
+      24px 48px #101828,
+      0px 48px #101828;
+  }
+}
+
+@keyframes animloader2 {
+  0% {
+    transform: translate(0, 0) rotateX(0) rotateY(0);
+  }
+  25% {
+    transform: translate(100%, 0) rotateX(0) rotateY(180deg);
+  }
+  50% {
+    transform: translate(100%, 100%) rotateX(-180deg) rotateY(180deg);
+  }
+  75% {
+    transform: translate(0, 100%) rotateX(-180deg) rotateY(360deg);
+  }
+  100% {
+    transform: translate(0, 0) rotateX(0) rotateY(360deg);
+  }
+}
+
+/* loader with small square  */
+
+/* 
+.loader{   
+  position: absolute;   
+  left: -25px;   
+  top: 50px; 
+}
+
+.loader::before {   
+  content: '';   
+  position: absolute;   
+  width: 70px;   
+  height: 70px;   
+  border-radius: 14px;   
+  background-color: white;   
+  border: 8px solid black;   
+  left: 50%;   
+  top: 50%;   
+  rotate: 45deg;   
+  transform: translate(-44%, 17%);   
+  animation: rotate 0.9s ease-in-out infinite; 
+}
+
+.loader-inner {   
+  position: absolute;   
+  width: 20px;   
+  height: 20px;   
+  background: black;   
+  border-radius: 2px;   
+  rotate: 45deg;   
+  bottom: -18px;   
+  left: 24px;   
+  animation: corner-jump 0.9s linear infinite, rotate-inner 0.9s linear infinite; 
+}   
+
+@keyframes rotate { 
+  0%, 25% { 
+    transform: translate(-50%, -50%) rotate(0deg)
+  } 
+  75%, 100% { 
+    transform: translate(-50%, -50%) rotate(-90deg)
+  } 
+}  
+
+@keyframes rotate-inner { 
+  0%, 25% { 
+    transform:  rotate(0deg)
+  } 
+  75%, 100% { 
+    transform:  rotate(-90deg)
+  } 
+}  
+
+@keyframes corner-jump {   
+  0% {
+    bottom: -20px;
+    transform:  rotate(-90deg)
+  } 
+  10% { 
+    bottom: -16px;
+    transform:  rotate(-90deg)
+  }
+  20% { 
+    bottom: -16px;
+    transform:  rotate(-90deg)
+  }
+  30% { 
+    bottom: -10px;
+    transform:  rotate(-90deg)
+  }
+  40% { 
+    bottom: -6px; 
+    transform:  rotate(-180deg)
+
+  }
+  50% { 
+    bottom: 0px; 
+    transform:  rotate(-180deg)
+
+  }
+  60% { 
+    bottom: -6px;
+    transform:  rotate(-270deg)
+
+  }
+  70%{
+    bottom: -10px;
+    transform:  rotate(-270deg)
+
+  } 
+  80% { 
+    bottom: -16px; 
+    transform:  rotate(-360deg)
+
+  } 
+  90% { 
+    bottom: -18px; 
+    transform:  rotate(-360deg)
+
+  } 
+  100% { 
+    bottom: -20px; 
+    transform:  rotate(-360deg)
+
+  } 
+} */
+
+.photo-loader {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-block;
+  border-top: 3px solid #000000;
+  border-right: 3px solid transparent;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.menu-button-shadow {
+  border: none;
+  padding: 8px 24px;
+  border-radius: 8px;
+  background: black;
+  color: white;
+  box-shadow: 0 0.4rem #e5e7eb;
+  cursor: pointer;
+}
+
+.coord-menu-button-shadow {
+  border: none;
+  padding: 8px 24px;
+  border-radius: 8px;
+  background: black;
+  color: white;
+  box-shadow: 0 0.4rem #99a1af;
+  cursor: pointer;
+}
+
+.menu-button-shadow:active {
+  color: white;
+  background: #fdc700;
+  box-shadow: 0 0.2rem #e5e7eb;
+  transform: translateY(0.2rem);
+}
+
+.menu-button-shadow:hover:not(:disabled) {
+  /* background: black; */
+  color: white;
+  /* color: black; */
+
+  /* text-shadow: 0 0.1rem #e5e7eb; */
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #eab308 !important;
+}
+
+.swiper-pagination-bullet {
+  height: 30px !important;
+  width: 30px !important;
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* .scrolling-text-container {
+  width: 100%;  
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.scrolling-text {
+  display: inline-block;
+  padding-right: 1.5em;
+  animation: scroll-left 15s linear infinite; 
+}
+
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+} */
+
+.dashboard-loader {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  position: relative;
+  animation: rotate 1s linear infinite;
+}
+.dashboard-loader::before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0px;
+  border-radius: 50%;
+  border: 5px solid black;
+  animation: prixClipFix 2s linear infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes prixClipFix {
+  0% {
+    clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
+  }
+  25% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
+  }
+  50% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
+  }
+  75% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+  }
+}
