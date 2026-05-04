@@ -47,39 +47,6 @@ function groupTone(group: TypeGroup): Tone {
   return "info";
 }
 
-/**
- * Recipe tiles are a UI presentation of Taliho Code — each picks the same
- * underlying `taliho-code` type. They make Module 1 feel full for users who
- * don't have Procore connected, and give first-timers a concrete starting
- * point without forcing them to understand what Taliho Code is.
- */
-interface Recipe {
-  id: "recipe-file" | "recipe-link" | "recipe-collection";
-  name: string;
-  tagline: string;
-  icon: string;
-}
-const RECIPES: Recipe[] = [
-  {
-    id: "recipe-file",
-    name: "Share a file or photo",
-    tagline: "Point to a PDF, image, or document.",
-    icon: "bx bxs-file-doc",
-  },
-  {
-    id: "recipe-link",
-    name: "Link to a website",
-    tagline: "Redirect to any web address.",
-    icon: "bx bxs-link",
-  },
-  {
-    id: "recipe-collection",
-    name: "Show a collection",
-    tagline: "A curated list of files and links on a scan.",
-    icon: "bx bxs-collection",
-  },
-];
-
 interface ModuleDef {
   id: "m1" | "m2" | "m3";
   title: string;
@@ -87,16 +54,9 @@ interface ModuleDef {
   icon: string;
   tone: Tone;
   typeIds: TypeId[];
-  recipes?: Recipe[];
 }
 
-function buildModules(isProcoreConnected: boolean): ModuleDef[] {
-  const procoreIds: TypeId[] = [
-    "procore-drawing",
-    "procore-tool",
-    "procore-location",
-    "procore-inspections",
-  ];
+function buildModules(): ModuleDef[] {
   return [
     {
       id: "m1",
@@ -104,8 +64,17 @@ function buildModules(isProcoreConnected: boolean): ModuleDef[] {
       desc: "Drawings, files, collections — anything your crew needs to see.",
       icon: "bx bxs-buildings",
       tone: "brand",
-      recipes: RECIPES,
-      typeIds: isProcoreConnected ? procoreIds : [],
+      // Hero shows the V3 production modules: Taliho Code + the four
+      // Procore cards. Procore cards are always visible (their flows
+      // handle the not-Procore-connected state downstream); Inspections
+      // is marked `comingSoon` in the catalog and renders disabled.
+      typeIds: [
+        "taliho-code",
+        "procore-location",
+        "procore-tool",
+        "procore-drawing",
+        "procore-inspections",
+      ],
     },
     {
       id: "m2",
@@ -179,15 +148,8 @@ export default function TypeSelectionView({ onPick }: TypeSelectionViewProps) {
     }
   }, [visibleBrowseGroups, browseGroup]);
 
-  const modules = useMemo(
-    () => buildModules(isProcoreConnected),
-    [isProcoreConnected],
-  );
+  const modules = useMemo(() => buildModules(), []);
 
-  const handleRecipePick = () => {
-    // All recipes resolve to the Taliho Code type.
-    onPick("taliho-code");
-  };
   const handleCardPick = (card: TypeCard) => {
     if (card.comingSoon) return;
     onPick(card.id);
@@ -218,7 +180,6 @@ export default function TypeSelectionView({ onPick }: TypeSelectionViewProps) {
           isProcoreConnected={isProcoreConnected}
           drilledModule={drilledModule}
           onDrill={setDrilledModule}
-          onRecipePick={handleRecipePick}
           onCardPick={handleCardPick}
         />
       ) : (
@@ -284,14 +245,12 @@ function GuidedHero({
   isProcoreConnected,
   drilledModule,
   onDrill,
-  onRecipePick,
   onCardPick,
 }: {
   modules: ModuleDef[];
   isProcoreConnected: boolean;
   drilledModule: "m2" | "m3" | null;
   onDrill: (id: "m2" | "m3" | null) => void;
-  onRecipePick: () => void;
   onCardPick: (card: TypeCard) => void;
 }) {
   const [m1, m2, m3] = modules;
@@ -302,7 +261,6 @@ function GuidedHero({
       <HeroModule
         m={m1}
         isProcoreConnected={isProcoreConnected}
-        onRecipePick={onRecipePick}
         onCardPick={onCardPick}
       />
 
@@ -325,12 +283,10 @@ function GuidedHero({
 function HeroModule({
   m,
   isProcoreConnected,
-  onRecipePick,
   onCardPick,
 }: {
   m: ModuleDef;
   isProcoreConnected: boolean;
-  onRecipePick: () => void;
   onCardPick: (card: TypeCard) => void;
 }) {
   const tone = TONES[m.tone];
@@ -362,14 +318,6 @@ function HeroModule({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {m.recipes?.map((recipe) => (
-          <RecipeTileView
-            key={recipe.id}
-            recipe={recipe}
-            tone={tone}
-            onPick={onRecipePick}
-          />
-        ))}
         {types.map((type) => (
           <TypeTileCompact
             key={type.id}
@@ -382,8 +330,8 @@ function HeroModule({
 
       {!isProcoreConnected && (
         <p className="mt-4 text-xs text-gray-500 italic">
-          Procore-linked types appear here when your company is connected to
-          Procore.
+          Procore-linked types are visible above; connect Procore to use
+          them.
         </p>
       )}
     </section>
@@ -392,7 +340,7 @@ function HeroModule({
 
 function ModuleTileButton({ m, onClick }: { m: ModuleDef; onClick: () => void }) {
   const tone = TONES[m.tone];
-  const total = (m.recipes?.length ?? 0) + m.typeIds.length;
+  const total = m.typeIds.length;
   return (
     <button
       type="button"
@@ -675,42 +623,3 @@ function TypeTileCompact({
   );
 }
 
-function RecipeTileView({
-  recipe,
-  tone,
-  onPick,
-}: {
-  recipe: Recipe;
-  tone: (typeof TONES)[Tone];
-  onPick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onPick}
-      className="relative text-left rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-brand-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-      data-testid={`type-recipe-${recipe.id}`}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={`w-10 h-10 rounded-lg ${tone.bg} ${tone.text} flex items-center justify-center shrink-0`}
-        >
-          <i className={`${recipe.icon} text-xl`} aria-hidden="true" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h4 className="font-semibold text-gray-900 text-sm truncate">
-              {recipe.name}
-            </h4>
-            <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-100 text-brand-700 shrink-0">
-              Recipe
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">
-            {recipe.tagline}
-          </p>
-        </div>
-      </div>
-    </button>
-  );
-}

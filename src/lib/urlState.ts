@@ -11,6 +11,7 @@ export type CreateQRState = {
   tab?: "single" | "bulk" | null;
   sub?: string | null;
   method?: string | null;
+  phase?: "rules" | "generated" | null;
   projectId?: string | null;
   groupingId?: string | null;
   groupAction?: "create" | null;
@@ -44,6 +45,7 @@ export function readCreateQRState(
     tab: (params.get("tab") as CreateQRState["tab"]) ?? null,
     sub: params.get("sub"),
     method: params.get("method"),
+    phase: (params.get("phase") as CreateQRState["phase"]) ?? null,
     projectId: params.get("projectId") ?? params.get("project") ?? null,
     groupingId: params.get("groupingId"),
     groupAction:
@@ -66,6 +68,7 @@ export function writeCreateQRState(
   if (state.tab != null) searchObj.tab = state.tab;
   if (state.sub != null) searchObj.sub = state.sub;
   if (state.method != null) searchObj.method = state.method;
+  if (state.phase != null) searchObj.phase = state.phase;
   if (state.projectId != null && state.projectId !== "null")
     searchObj.projectId = state.projectId;
   if (state.groupingId != null && state.groupingId !== "null")
@@ -162,6 +165,7 @@ export function buildCreateQRHref(state: CreateQRState): string {
   if (state.tab != null) qp.set("tab", state.tab);
   if (state.sub != null) qp.set("sub", state.sub);
   if (state.method != null) qp.set("method", state.method);
+  if (state.phase != null) qp.set("phase", state.phase);
   if (state.projectId != null) qp.set("projectId", state.projectId);
   if (state.groupingId != null) qp.set("groupingId", state.groupingId);
   if (state.groupAction != null) qp.set("groupAction", state.groupAction);

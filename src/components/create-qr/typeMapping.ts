@@ -19,7 +19,26 @@ export type BulkMethod =
   | "upload-csv"
   | "manual-entry";
 
-const VALID_TYPE_IDS = new Set<TypeId>([
+/**
+ * The subset of `TypeId` that has real routing behavior — these are the 10
+ * types the Type-first flow can write to the URL, map to the legacy
+ * (tab, sub, method) triple, and resolve a `configureKey` for. The wider
+ * `TypeId` union (in typeCatalog.ts) also includes coming-soon catalog-only
+ * placeholders (e.g. `simple-wifi`) that must never reach state writers.
+ */
+export type ActiveTypeId =
+  | "tool-tracker"
+  | "taliho-code"
+  | "equipment-code"
+  | "qr-arrangement"
+  | "procore-location"
+  | "procore-inspections"
+  | "procore-tool"
+  | "procore-drawing"
+  | "vcard"
+  | "url";
+
+const VALID_TYPE_IDS = new Set<ActiveTypeId>([
   "tool-tracker",
   "taliho-code",
   "equipment-code",
@@ -32,21 +51,35 @@ const VALID_TYPE_IDS = new Set<TypeId>([
   "url",
 ]);
 
-function isValidTypeId(value: unknown): value is TypeId {
-  return typeof value === "string" && VALID_TYPE_IDS.has(value as TypeId);
+function isValidTypeId(value: unknown): value is ActiveTypeId {
+  return (
+    typeof value === "string" &&
+    (VALID_TYPE_IDS as Set<string>).has(value)
+  );
 }
 
 /**
- * Resolves a TypeId from URL state. Prefers the explicit `typeId` param when
- * present and valid; otherwise derives from the legacy `(tab, sub, method)`
- * triple so bookmarked URLs from the old flow keep resolving to the correct
- * Type card.
+ * Type guard narrowing a `TypeId` (all 19 catalog entries) down to an
+ * `ActiveTypeId` (the 10 with routing behavior). Use this at the picker →
+ * state-writer boundary so the 9 catalog-only placeholders cannot slip into
+ * URL state at compile time.
+ */
+export function isActiveTypeId(id: TypeId): id is ActiveTypeId {
+  return (VALID_TYPE_IDS as Set<string>).has(id);
+}
+
+/**
+ * Resolves an `ActiveTypeId` from URL state. Prefers the explicit `typeId`
+ * param when present and valid; otherwise derives from the legacy
+ * `(tab, sub, method)` triple so bookmarked URLs from the old flow keep
+ * resolving to the correct Type card.
  *
  * Returns null for the existing-group shortcut path (`tab=bulk` with
  * `groupingId` and `sub=existing-group`) — that path bypasses Type selection
- * entirely.
+ * entirely. Also returns null for catalog-only placeholders (e.g.
+ * `simple-wifi`) since they have no routing behavior.
  */
-export function resolveTypeId(state: CreateQRState): TypeId | null {
+export function resolveTypeId(state: CreateQRState): ActiveTypeId | null {
   if (isValidTypeId(state.typeId)) return state.typeId;
 
   // Existing-group shortcut bypasses Type selection.
@@ -68,12 +101,14 @@ export function resolveTypeId(state: CreateQRState): TypeId | null {
  * Returns a partial CreateQRState so callers can merge it into the URL
  * without overwriting unrelated fields like `projectId` or `groupingId`.
  *
- * Coming-soon type IDs (tool-tracker, equipment-code, qr-arrangement,
- * procore-inspections) have no legacy representation — callers should only
- * set `typeId` in the URL for those, never the legacy triple.
+ * Coming-soon type IDs (equipment-code, qr-arrangement, procore-inspections)
+ * have no legacy representation — callers should only set `typeId` in the
+ * URL for those, never the legacy triple. Catalog-only placeholders
+ * (`simple-*`) are excluded by the `ActiveTypeId` parameter type so they
+ * cannot reach this function.
  */
 export function toLegacyState(
-  typeId: TypeId,
+  typeId: ActiveTypeId,
   quantity: Quantity | null,
   method: BulkMethod | null,
 ): Partial<CreateQRState> {
@@ -138,26 +173,40 @@ export function toLegacyState(
       out.method = null;
       return out;
 
-    // Coming-soon types: no legacy mapping. Return typeId only.
     case "tool-tracker":
+      if (quantity === "single") {
+        out.tab = "single";
+        out.sub = "tool-tracker";
+        out.method = null;
+      } else if (quantity === "bulk") {
+        out.tab = "bulk";
+        out.sub = "tool-tracker";
+        out.method = null;
+      }
+      return out;
+
+    // Coming-soon types: no legacy mapping. Return typeId only.
     case "equipment-code":
     case "qr-arrangement":
     case "procore-inspections":
       return out;
   }
-
-  return out;
 }
 
 /**
  * Reverse derivation: given legacy URL state, produce the new-flow triple.
  * Used by `resolveTypeId` for back-compat. Returns null when the state is
  * ambiguous or doesn't correspond to any Type (e.g., existing-group path,
- * step-1 empty state).
+ * step-1 empty state). The `typeId` is always an `ActiveTypeId` since
+ * legacy state can only encode the 10 routable types.
  */
 export function fromLegacyState(
   state: CreateQRState,
-): { typeId: TypeId; quantity: Quantity; method: BulkMethod | null } | null {
+): {
+  typeId: ActiveTypeId;
+  quantity: Quantity;
+  method: BulkMethod | null;
+} | null {
   const { tab, sub, method } = state;
 
   if (tab === "single") {
@@ -183,10 +232,15 @@ export function fromLegacyState(
         return { typeId: "vcard", quantity: "single", method: null };
       case "url":
         return { typeId: "url", quantity: "single", method: null };
+      case "tool-tracker":
+        return { typeId: "tool-tracker", quantity: "single", method: null };
     }
   }
 
   if (tab === "bulk") {
+    if (sub === "tool-tracker") {
+      return { typeId: "tool-tracker", quantity: "bulk", method: null };
+    }
     if (sub === "arrangements" || sub === "arrangement") {
       if (
         method === "procore" ||
@@ -219,12 +273,12 @@ export interface FlowModel {
   /** True when the Type-first flow is active. */
   enabled: boolean;
   stage: FlowStage;
-  typeId: TypeId | null;
+  typeId: ActiveTypeId | null;
   quantity: Quantity | null;
   method: BulkMethod | null;
 }
 
-const SINGLE_ONLY_TYPES = new Set<TypeId>([
+const SINGLE_ONLY_TYPES = new Set<ActiveTypeId>([
   "procore-location",
   "procore-tool",
   "procore-inspections",
@@ -232,7 +286,18 @@ const SINGLE_ONLY_TYPES = new Set<TypeId>([
   "url",
 ]);
 
-const BULK_ONLY_TYPES = new Set<TypeId>(["equipment-code", "qr-arrangement"]);
+const BULK_ONLY_TYPES = new Set<ActiveTypeId>([
+  "equipment-code",
+  "qr-arrangement",
+]);
+
+/**
+ * Types that skip the dedicated Quantity step. The Single/Bulk choice is
+ * surfaced as an in-form segmented control instead, with the user's last-used
+ * mode persisted in localStorage. When `tab` is null for one of these types,
+ * the flow defaults to single configure rather than the Quantity step.
+ */
+const SKIPS_QUANTITY_STEP = new Set<ActiveTypeId>(["tool-tracker"]);
 
 function isBulkMethod(v: unknown): v is BulkMethod {
   return (
@@ -336,6 +401,17 @@ export function computeFlowModel(
     state.tab === "single" ? "single" : state.tab === "bulk" ? "bulk" : null;
 
   if (quantity === null) {
+    // Types that skip the Quantity step (Tool Tracker) default to single
+    // configure rather than rendering a dedicated picker.
+    if (SKIPS_QUANTITY_STEP.has(typeId)) {
+      return {
+        enabled: true,
+        stage: "configure",
+        typeId,
+        quantity: "single",
+        method: null,
+      };
+    }
     return {
       enabled: true,
       stage: "quantity",
@@ -441,6 +517,13 @@ export function deriveStageLabels(
   const isBulkOnlyType =
     typeId === "equipment-code" || typeId === "qr-arrangement";
   if (isBulkOnlyType) {
+    return [label, "Name"];
+  }
+
+  // Types that skip the Quantity step (Tool Tracker) also collapse to 2 steps.
+  // Single vs Bulk is chosen via an in-form segmented control rather than a
+  // dedicated step in the indicator.
+  if (SKIPS_QUANTITY_STEP.has(typeId)) {
     return [label, "Name"];
   }
 

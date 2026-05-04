@@ -55,6 +55,8 @@ import ConfigureBulkGroup from "./ConfigureBulkGroup";
 import ConfigureBulkDrawings from "./ConfigureBulkDrawings";
 import ConfigureVCard from "./ConfigureVCard";
 import ConfigureURL from "./ConfigureURL";
+import ConfigureToolTrackerSingle from "./ConfigureToolTrackerSingle";
+import ConfigureToolTrackerBulk from "./ConfigureToolTrackerBulk";
 
 export default function ConfigureView({
   configureKey,
@@ -2480,6 +2482,12 @@ export default function ConfigureView({
   };
   const title = (configureKey && titleByKey[configureKey]) || "Configure";
 
+  // Tool Tracker owns its own heading (and segmented control), so the outer
+  // wrapper drops the Configure chrome and nested inner-card border.
+  const ownsOwnHeading =
+    configureKey === "single:tool-tracker" ||
+    configureKey === "bulk:tool-tracker";
+
   function updateSelectionHistory(
     prev: string[],
     next: string[],
@@ -2654,6 +2662,10 @@ export default function ConfigureView({
         return <ConfigureVCard />;
       case "single:url":
         return <ConfigureURL />;
+      case "single:tool-tracker":
+        return <ConfigureToolTrackerSingle />;
+      case "bulk:tool-tracker":
+        return <ConfigureToolTrackerBulk />;
       case "bulk:existing-group":
         return (
           <ConfigureExistingGroup
@@ -2823,17 +2835,25 @@ export default function ConfigureView({
           className={`flex-1 flex flex-col min-h-0 ${configureKey === "bulk:arrangement:assorted" || configureKey === "bulk:existing-group" ? "max-w-none" : "max-w-2xl"}`}
         >
           <div className="rounded-2xl border border-gray-200 bg-white/80 backdrop-blur p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-                <p className="text-gray-600 mt-0.5 text-sm">
-                  Adjust settings below, then continue.
-                </p>
+            {!ownsOwnHeading && (
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {title}
+                  </h2>
+                  <p className="text-gray-600 mt-0.5 text-sm">
+                    Adjust settings below, then continue.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              {renderBody()}
-            </div>
+            )}
+            {ownsOwnHeading ? (
+              renderBody()
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-4">
+                {renderBody()}
+              </div>
+            )}
           </div>
         </div>
       </div>

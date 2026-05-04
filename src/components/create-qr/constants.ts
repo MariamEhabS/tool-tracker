@@ -41,6 +41,8 @@ export function getLabelByKey(groupName?: string): Record<string, string> {
     "single:procore-drawing": "Procore Drawing",
     "single:vcard": "V-Card",
     "single:url": "URL",
+    "single:tool-tracker": "Tool Tracker",
+    "bulk:tool-tracker": "Tool Trackers",
     "bulk:existing-group": `Add to "${groupName || "Group"}"`,
     "bulk:arrangement:assorted": "Assorted Group",
     "bulk:arrangement:procore-drawings": "Procore Drawings",

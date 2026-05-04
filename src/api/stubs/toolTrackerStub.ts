@@ -1,3 +1,9 @@
+import type {
+  CreateToolTrackersPayload,
+  CreateToolTrackersResponse,
+  ToolTracker,
+} from "@/components/create-qr/toolTracker/types";
+
 type ToolTrackerStatus = "available" | "checked-out" | "handoff-requested";
 
 type ToolTrackerRecord = {
@@ -15,6 +21,41 @@ type ScanMutationResult = {
 };
 
 const nowIso = () => new Date().toISOString();
+const toolTrackers: ToolTracker[] = [];
+
+const delay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+export const createToolTrackers = async (
+  payload: CreateToolTrackersPayload,
+): Promise<CreateToolTrackersResponse> => {
+  console.info("[stub] toolTracker:createToolTrackers:", payload);
+  await delay(500);
+
+  const baseTimestamp = Date.now();
+  const created = payload.tools.map((tool, index) => {
+    const now = nowIso();
+    const createdTool: ToolTracker = {
+      toolId: `stub-tt-${baseTimestamp}-${index}`,
+      qrCodeId: `stub-qr-${baseTimestamp}-${index}`,
+      qrPayloadUrl: `https://taliho.test/scan/stub-tt-${baseTimestamp}-${index}`,
+      tool,
+      rules: payload.rules,
+      status: "available",
+      createdAt: now,
+      updatedAt: now,
+    };
+    toolTrackers.push(createdTool);
+    return createdTool;
+  });
+
+  return { toolTrackers: created };
+};
+
+export const getPrintablePDF = async (_toolId: string): Promise<Blob> => {
+  await delay(200);
+  return new Blob([new Uint8Array([0x25])], { type: "application/pdf" });
+};
 
 export const getToolByQRCode = async (
   qrCodeId: string,

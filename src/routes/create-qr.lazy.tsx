@@ -28,6 +28,7 @@ import type { TypeId } from "@/components/create-qr/typeCatalog";
 import {
   computeFlowModel,
   deriveStageLabels,
+  isActiveTypeId,
   stageToCurrentStep,
   toLegacyState,
 } from "@/components/create-qr/typeMapping";
@@ -35,6 +36,10 @@ import TypeSelectionView from "@/components/create-qr/TypeSelectionView";
 import QuantitySelectionView from "@/components/create-qr/QuantitySelectionView";
 import BulkMethodSelectionView from "@/components/create-qr/BulkMethodSelectionView";
 import type { BulkMethod } from "@/components/create-qr/typeMapping";
+import { readLastMode } from "@/components/create-qr/ConfigureView/toolTrackerCarryDraft";
+import CreateQRv2 from "@/components/create-qr/v2/CreateQRv2";
+import CreateEquipmentV2 from "@/components/create-qr/v2/CreateEquipmentV2";
+import CreateArrangementV2 from "@/components/create-qr/v2/CreateArrangementV2";
 import { getStoredUser } from "@/utils/getStoredUser";
 
 
@@ -87,6 +92,7 @@ export default function CreateQR() {
         tab: urlState.tab,
         sub: urlState.sub,
         method: urlState.method,
+        phase: urlState.phase,
         projectId: urlState.projectId ?? undefined,
         groupingId: urlState.groupingId ?? undefined,
         groupAction: urlState.groupAction ?? undefined,
@@ -102,6 +108,8 @@ export default function CreateQR() {
         normalized.sub = (next.sub ?? undefined) as Merged["sub"];
       if (Object.prototype.hasOwnProperty.call(next, "method"))
         normalized.method = (next.method ?? undefined) as Merged["method"];
+      if (Object.prototype.hasOwnProperty.call(next, "phase"))
+        normalized.phase = (next.phase ?? undefined) as Merged["phase"];
       if (Object.prototype.hasOwnProperty.call(next, "projectId"))
         normalized.projectId = (next.projectId ??
           undefined) as Merged["projectId"];
@@ -125,6 +133,7 @@ export default function CreateQR() {
       urlState.tab,
       urlState.sub,
       urlState.method,
+      urlState.phase,
       urlState.projectId,
       urlState.groupingId,
       urlState.groupAction,
@@ -253,6 +262,18 @@ export default function CreateQR() {
       return "bulk:existing-group";
     }
 
+    if (s.typeId === "tool-tracker" || s.sub === "tool-tracker") {
+      const toolTrackerMode =
+        s.tab === "bulk"
+          ? "bulk"
+          : s.tab === "single"
+            ? "single"
+            : readLastMode();
+      return toolTrackerMode === "bulk"
+        ? "bulk:tool-tracker"
+        : "single:tool-tracker";
+    }
+
     if (s.tab === "single") {
       if (s.sub === "taliho" || s.sub === "folder") return "single:taliho";
       if (s.sub === "procore-location" || s.sub === "location")
@@ -327,7 +348,7 @@ export default function CreateQR() {
   const handleTypePick = useCallback(
     (typeId: TypeId) => {
       const card = getTypeById(typeId);
-      if (!card || card.comingSoon) return;
+      if (!card || card.comingSoon || !isActiveTypeId(typeId)) return;
       if (card.supportsBulk && card.supportsSingle) {
         // Dual-quantity: advance to Quantity step.
         writeState({
@@ -335,6 +356,7 @@ export default function CreateQR() {
           tab: null,
           sub: null,
           method: null,
+          phase: null,
         });
         return;
       }
@@ -346,6 +368,7 @@ export default function CreateQR() {
         tab: legacy.tab ?? null,
         sub: legacy.sub ?? null,
         method: legacy.method ?? null,
+        phase: null,
       });
     },
     [writeState],
@@ -358,6 +381,7 @@ export default function CreateQR() {
       tab: null,
       sub: null,
       method: null,
+      phase: null,
     });
   }, [writeState]);
 
@@ -372,6 +396,7 @@ export default function CreateQR() {
           tab: "bulk",
           sub: null,
           method: null,
+          phase: null,
         });
         return;
       }
@@ -381,6 +406,7 @@ export default function CreateQR() {
         tab: legacy.tab ?? null,
         sub: legacy.sub ?? null,
         method: legacy.method ?? null,
+        phase: null,
       });
     },
     [flowModel.typeId, writeState],
@@ -392,6 +418,7 @@ export default function CreateQR() {
       tab: null,
       sub: null,
       method: null,
+      phase: null,
     });
   }, [writeState]);
 
@@ -405,10 +432,37 @@ export default function CreateQR() {
         tab: legacy.tab ?? null,
         sub: legacy.sub ?? null,
         method: legacy.method ?? null,
+        phase: null,
       });
     },
     [flowModel.typeId, writeState],
   );
+
+  const handleBackToTypeSelection = useCallback(() => {
+    writeState({
+      typeId: null,
+      tab: null,
+      sub: null,
+      method: null,
+      phase: null,
+    });
+  }, [writeState]);
+
+  if (flowModel.typeId === "tool-tracker" && flowModel.stage !== "type") {
+    return (
+      <CreateQRv2
+        onBackToTypes={handleBackToTypeSelection}
+      />
+    );
+  }
+
+  if (flowModel.typeId === "equipment-code" && flowModel.stage !== "type") {
+    return <CreateEquipmentV2 onBackToTypes={handleBackToTypeSelection} />;
+  }
+
+  if (flowModel.typeId === "qr-arrangement" && flowModel.stage !== "type") {
+    return <CreateArrangementV2 onBackToTypes={handleBackToTypeSelection} />;
+  }
 
   return (
     <div className="grow flex flex-col p-8">
@@ -551,15 +605,20 @@ export default function CreateQR() {
               configureKey={configureKey}
               onBack={() => {
                 // Type-first back: clear quantity/method; if single-only type,
-                // also clear typeId so user returns to the Type step.
+                // or a type that skips the Quantity step, also clear typeId
+                // so user returns to the Type step.
                 const isSingleOnly = flowModel.typeId
                   ? getTypeById(flowModel.typeId)?.supportsBulk === false
                   : false;
+                const skipsQuantityStep = flowModel.typeId === "tool-tracker";
                 writeState({
                   tab: null,
                   sub: null,
                   method: null,
-                  ...(isSingleOnly ? { typeId: null } : {}),
+                  phase: null,
+                  ...(isSingleOnly || skipsQuantityStep
+                    ? { typeId: null }
+                    : {}),
                 });
               }}
               showLoading={showLoading}

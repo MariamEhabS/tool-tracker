@@ -66,7 +66,7 @@ export const TYPES: readonly TypeCard[] = [
     icon: "bx bxs-wrench",
     supportsSingle: true,
     supportsBulk: true,
-    comingSoon: true,
+    comingSoon: false,
     isNew: true,
     detail: {
       oneLiner:
@@ -129,8 +129,8 @@ export const TYPES: readonly TypeCard[] = [
     icon: "bx bxs-package",
     supportsSingle: false,
     supportsBulk: true,
-    comingSoon: true,
-    isNew: false,
+    comingSoon: false,
+    isNew: true,
     detail: {
       oneLiner:
         "Generate a series of equipment codes with a shared prefix — ideal for tagging rental equipment, fleet vehicles, or numbered inventory.",
@@ -154,8 +154,8 @@ export const TYPES: readonly TypeCard[] = [
     icon: "bx bxs-grid",
     supportsSingle: false,
     supportsBulk: true,
-    comingSoon: true,
-    isNew: false,
+    comingSoon: false,
+    isNew: true,
     detail: {
       oneLiner:
         "Create a sheet with multiple QR codes arranged in a grid — for printing onto a single page, binder, or posted on-site.",

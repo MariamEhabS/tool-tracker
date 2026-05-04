@@ -2,6 +2,9 @@
 @plugin "@tailwindcss/forms";
 
 @theme {
+  --font-display: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  --font-display-mono: "JetBrains Mono", "SFMono-Regular", monospace;
+
   /* Brand palette aliased to yellow */
   --color-brand-50: var(--color-yellow-50);
   --color-brand-100: var(--color-yellow-100);
