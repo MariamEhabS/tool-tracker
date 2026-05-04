@@ -323,9 +323,7 @@ export default function SearchComboBox(props: SearchComboBoxProps) {
 
   return (
     <div
-      ref={(node) => {
-        setRootNode(node);
-      }}
+      ref={setRootNode}
       className={`relative ${className}`}
       id={id}
     >
