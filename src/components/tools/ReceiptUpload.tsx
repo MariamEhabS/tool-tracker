@@ -10,7 +10,7 @@ const VALID_TYPES = [
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export interface ReceiptFile {
-  file: File;
+  file?: File;
   name: string;
   size: number;
   type: string;
