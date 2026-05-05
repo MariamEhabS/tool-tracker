@@ -40,6 +40,8 @@ import { readLastMode } from "@/components/create-qr/ConfigureView/toolTrackerCa
 import CreateQRv2 from "@/components/create-qr/v2/CreateQRv2";
 import CreateEquipmentV2 from "@/components/create-qr/v2/CreateEquipmentV2";
 import CreateArrangementV2 from "@/components/create-qr/v2/CreateArrangementV2";
+import CreateVCardV2 from "@/components/create-qr/v2/CreateVCardV2";
+import CreateHardHatV2 from "@/components/create-qr/v2/CreateHardHatV2";
 import { getStoredUser } from "@/utils/getStoredUser";
 
 
@@ -462,6 +464,14 @@ export default function CreateQR() {
 
   if (flowModel.typeId === "qr-arrangement" && flowModel.stage !== "type") {
     return <CreateArrangementV2 onBackToTypes={handleBackToTypeSelection} />;
+  }
+
+  if (flowModel.typeId === "vcard" && flowModel.stage !== "type") {
+    return <CreateVCardV2 onBackToTypes={handleBackToTypeSelection} />;
+  }
+
+  if (flowModel.typeId === "hard-hat" && flowModel.stage !== "type") {
+    return <CreateHardHatV2 onBackToTypes={handleBackToTypeSelection} />;
   }
 
   return (

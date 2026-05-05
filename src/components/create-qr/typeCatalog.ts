@@ -19,6 +19,7 @@ export type TypeId =
   | "procore-tool"
   | "procore-drawing"
   | "vcard"
+  | "hard-hat"
   | "url"
   | "simple-wifi"
   | "simple-text"
@@ -171,6 +172,32 @@ export const TYPES: readonly TypeCard[] = [
     },
   },
   {
+    id: "hard-hat",
+    group: "taliho",
+    name: "Hard Hat",
+    tagline: "Credentials, emergency info, and contact at a scan.",
+    icon: "bx bxs-hard-hat",
+    supportsSingle: true,
+    supportsBulk: false,
+    comingSoon: false,
+    isNew: true,
+    detail: {
+      oneLiner:
+        "A safety profile for a field worker. Scanning a Hard Hat QR opens a mobile page with the worker's identity, credential status (valid / expiring / expired), downloadable certifications, and emergency contact info.",
+      bestFor: [
+        "Stickers on a hard hat or badge for instant credential checks on-site",
+        "Equipment tags that link a machine to its operator's certifications",
+        "Trailer-board safety profiles for the whole crew",
+      ],
+      how: [
+        "Pick a trade template to pre-fill credential categories.",
+        "Upload certs and inspections, set expiration dates.",
+        "Add emergency contact and medical notes.",
+        "Scans show credential status at a glance plus document downloads.",
+      ],
+    },
+  },
+  {
     id: "procore-location",
     group: "procore",
     name: "Procore Location",
@@ -273,25 +300,25 @@ export const TYPES: readonly TypeCard[] = [
   {
     id: "vcard",
     group: "simple",
-    name: "V-Card",
+    name: "Business Card",
     tagline: "Share contact info with one scan.",
     icon: "bx bxs-contact",
     supportsSingle: true,
-    supportsBulk: false,
+    supportsBulk: true,
     comingSoon: false,
     isNew: false,
     detail: {
       oneLiner:
-        "A digital business card. Scanning saves the contact directly to the scanner's phone — name, title, company, phone, email, website.",
+        "A digital business card. Scanning saves the contact directly to the scanner's phone — name, title, company, phone, email, website. Procore users can also generate cards in bulk from the project directory.",
       bestFor: [
         "On the back of a business card or nameplate",
         "Trailer signage so subcontractors can save the super's contact",
-        "Anywhere you hand out contact info repeatedly",
+        "Badges or hardhat stickers for the whole project team",
       ],
       how: [
-        "Enter the contact details.",
-        "Taliho generates a vCard QR.",
-        "Scans prompt the phone to save the contact.",
+        "Enter the contact details (or auto-fill from Procore).",
+        "Taliho generates a Business Card QR.",
+        "Scans open a mobile contact page with one-tap Save to Contacts.",
       ],
     },
   },

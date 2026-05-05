@@ -65,15 +65,17 @@ function buildModules(): ModuleDef[] {
       icon: "bx bxs-buildings",
       tone: "brand",
       // Hero shows the V3 production modules: Taliho Code + the four
-      // Procore cards. Procore cards are always visible (their flows
-      // handle the not-Procore-connected state downstream); Inspections
-      // is marked `comingSoon` in the catalog and renders disabled.
+      // Procore cards + Hard Hat. Procore cards are always visible
+      // (their flows handle the not-Procore-connected state
+      // downstream); Inspections is marked `comingSoon` in the
+      // catalog and renders disabled.
       typeIds: [
         "taliho-code",
         "procore-location",
         "procore-tool",
         "procore-drawing",
         "procore-inspections",
+        "hard-hat",
       ],
     },
     {

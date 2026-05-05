@@ -7,15 +7,21 @@ import {
   writeCreateQRState,
   type CreateQRState,
 } from "@/lib/urlState";
-import { SAMPLE_TOOL_CATEGORIES } from "@/data/seed/toolTrackerSeed";
+import {
+  SAMPLE_TOOL_CATEGORIES,
+  SAMPLE_TOOL_SEED,
+} from "@/data/seed/toolTrackerSeed";
 import type {
   CreateToolTrackersResponse,
   ToolInput,
+  ToolRetirement,
+  ToolRetirementReason,
 } from "@/components/create-qr/toolTracker/types";
 import ToolPhotoUpload from "./ToolPhotoUpload";
 import ToolTrackerRules from "./ToolTrackerRules";
 import ToolTrackerGenerated from "./ToolTrackerGenerated";
 import QuantityModeToggle from "./QuantityModeToggle";
+import RetireToolModal from "./RetireToolModal";
 import {
   setCarryDraft,
   writeLastMode,
@@ -45,6 +51,18 @@ export default function ConfigureToolTrackerSingle() {
   const [tool, setTool] = useState<ToolFormState>(INITIAL_TOOL);
   const [createdResponse, setCreatedResponse] =
     useState<CreateToolTrackersResponse | null>(null);
+  const [retireModalOpen, setRetireModalOpen] = useState(false);
+
+  const isRetired = !!tool.retirement;
+
+  const handleRetireConfirm = (retirement: ToolRetirement) => {
+    setTool((prev) => ({ ...prev, retirement }));
+    setRetireModalOpen(false);
+  };
+
+  const handleRestore = () => {
+    setTool((prev) => ({ ...prev, retirement: null }));
+  };
 
   // Strip UI-only fields before handing off to the Rules stub call.
   const toolPayload = useMemo<ToolInput>(() => {
@@ -89,16 +107,16 @@ export default function ConfigureToolTrackerSingle() {
     });
   };
 
+  let phaseContent: React.ReactNode;
   if (phase === "rules") {
-    return (
+    phaseContent = (
       <ToolTrackerRules
         tools={[toolPayload]}
         onBackToInfo={handleBackToInfo}
         onGenerated={handleGenerated}
       />
     );
-  }
-  if (phase === "generated") {
+  } else if (phase === "generated") {
     if (!createdResponse) {
       // Edge case: page refreshed on phase=generated. State is gone — silently
       // bounce back to phase=info so the user can re-enter.
@@ -109,39 +127,60 @@ export default function ConfigureToolTrackerSingle() {
       });
       return null;
     }
-    return (
+    phaseContent = (
       <ToolTrackerGenerated
         response={createdResponse}
         onCreateMore={handleCreateMore}
       />
     );
+  } else {
+    phaseContent = <ToolInfoForm tool={tool} setTool={setTool} />;
   }
-  return <ToolInfoForm tool={tool} setTool={setTool} />;
+
+  return (
+    <div className="space-y-4" data-testid="tool-tracker-single-shell">
+      {isRetired && tool.retirement && (
+        <RetiredBanner
+          retirement={tool.retirement}
+          onRestore={handleRestore}
+        />
+      )}
+      {phaseContent}
+      {/*
+        PLACEHOLDER LOCATION — per design review request.
+        The "Retire tool" CTA logically belongs on the tool's detail page
+        (post-creation), not the create-flow. Surfaced here on every phase
+        so the team can review the lifecycle UX end-to-end. Move to the
+        tool detail page before merge.
+      */}
+      <LifecycleSection
+        isRetired={isRetired}
+        onRetireClick={() => setRetireModalOpen(true)}
+        onRestore={handleRestore}
+      />
+      <RetireToolModal
+        open={retireModalOpen}
+        toolName={tool.name}
+        onClose={() => setRetireModalOpen(false)}
+        onConfirm={handleRetireConfirm}
+      />
+    </div>
+  );
 }
 
 interface ToolFormState extends ToolInput {
   /** Object URL preview kept alongside the File so we can render the tile. */
   photoFile?: File | null;
   photoPreviewUrl?: string | null;
+  /** Set when the tool has been decommissioned via RetireToolModal. */
+  retirement?: ToolRetirement | null;
 }
 
 const INITIAL_TOOL: ToolFormState = {
-  name: "",
-  category: "Uncategorized",
-  serial: "",
-  homeLocation: "",
-  manufacturer: "",
-  model: "",
-  barcode: "",
-  description: "",
-  vendor: "",
-  purchaseDate: "",
-  purchasePrice: "",
-  warrantyDate: "",
-  productUrl: "",
-  manualUrl: "",
+  ...SAMPLE_TOOL_SEED,
   photoFile: null,
   photoPreviewUrl: null,
+  retirement: null,
 };
 
 interface ToolInfoFormProps {
@@ -601,6 +640,128 @@ function SubSection({
         {label}
       </div>
       {children}
+    </div>
+  );
+}
+
+const REASON_LABELS: Record<ToolRetirementReason, string> = {
+  broken: "Broken / no longer functional",
+  lost: "Lost or stolen",
+  sold: "Sold or transferred",
+  scrapped: "Scrapped / disposed",
+  other: "Other",
+};
+
+function formatRetirementDate(iso: string): string {
+  // Accept YYYY-MM-DD; fall back to the raw string if unparseable.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function RetiredBanner({
+  retirement,
+  onRestore,
+}: {
+  retirement: ToolRetirement;
+  onRestore: () => void;
+}) {
+  return (
+    <div
+      className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"
+      data-testid="tool-retired-banner"
+      role="status"
+    >
+      <i
+        className="bx bx-archive text-amber-600 text-xl mt-0.5"
+        aria-hidden="true"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-amber-900">
+          Retired — hidden from the active list
+        </div>
+        <div className="mt-0.5 text-xs text-amber-800">
+          {REASON_LABELS[retirement.reason]} ·{" "}
+          {formatRetirementDate(retirement.retiredAt)}
+          {retirement.notes ? ` · ${retirement.notes}` : ""}
+        </div>
+        <div className="mt-1 text-xs text-amber-700">
+          History and metadata are preserved. Scans of this QR will show a
+          retired notice.
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onRestore}
+        className="text-xs font-medium text-amber-900 hover:text-amber-950 underline underline-offset-2 shrink-0"
+        data-testid="tool-retired-restore"
+      >
+        Restore
+      </button>
+    </div>
+  );
+}
+
+function LifecycleSection({
+  isRetired,
+  onRetireClick,
+  onRestore,
+}: {
+  isRetired: boolean;
+  onRetireClick: () => void;
+  onRestore: () => void;
+}) {
+  return (
+    <div
+      className="rounded-lg border border-dashed border-gray-300 bg-gray-50/60 px-4 py-3"
+      data-testid="tool-lifecycle-section"
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <i
+          className="bx bx-recycle text-gray-500 text-base"
+          aria-hidden="true"
+        />
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+          Tool lifecycle
+        </span>
+        <span
+          className="ml-auto text-[10px] font-medium uppercase tracking-wider text-gray-400"
+          title="Placeholder — dev will move this CTA to the tool detail page"
+        >
+          Placeholder
+        </span>
+      </div>
+      <p className="text-xs text-gray-600 mb-3">
+        Decommission this tool when it&apos;s broken, lost, sold, or scrapped.
+        It&apos;s removed from the active list, but its history stays
+        searchable.
+      </p>
+      {isRetired ? (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onRestore}
+          data-testid="tool-lifecycle-restore"
+          leftIconClass="bx bx-undo"
+        >
+          Restore tool to active
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="danger"
+          onClick={onRetireClick}
+          data-testid="tool-lifecycle-retire"
+          leftIconClass="bx bx-archive-in"
+        >
+          Retire tool…
+        </Button>
+      )}
     </div>
   );
 }

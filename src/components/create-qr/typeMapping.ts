@@ -36,6 +36,7 @@ export type ActiveTypeId =
   | "procore-tool"
   | "procore-drawing"
   | "vcard"
+  | "hard-hat"
   | "url";
 
 const VALID_TYPE_IDS = new Set<ActiveTypeId>([
@@ -48,6 +49,7 @@ const VALID_TYPE_IDS = new Set<ActiveTypeId>([
   "procore-tool",
   "procore-drawing",
   "vcard",
+  "hard-hat",
   "url",
 ]);
 
@@ -167,6 +169,12 @@ export function toLegacyState(
       out.method = null;
       return out;
 
+    case "hard-hat":
+      out.tab = "single";
+      out.sub = "hard-hat";
+      out.method = null;
+      return out;
+
     case "url":
       out.tab = "single";
       out.sub = "url";
@@ -230,6 +238,8 @@ export function fromLegacyState(
         return { typeId: "procore-drawing", quantity: "single", method: null };
       case "vcard":
         return { typeId: "vcard", quantity: "single", method: null };
+      case "hard-hat":
+        return { typeId: "hard-hat", quantity: "single", method: null };
       case "url":
         return { typeId: "url", quantity: "single", method: null };
       case "tool-tracker":
@@ -283,6 +293,7 @@ const SINGLE_ONLY_TYPES = new Set<ActiveTypeId>([
   "procore-tool",
   "procore-inspections",
   "vcard",
+  "hard-hat",
   "url",
 ]);
 
@@ -508,6 +519,7 @@ export function deriveStageLabels(
     typeId === "procore-tool" ||
     typeId === "procore-inspections" ||
     typeId === "vcard" ||
+    typeId === "hard-hat" ||
     typeId === "url";
   if (isSingleOnlyType) {
     return [label, "Name"];
