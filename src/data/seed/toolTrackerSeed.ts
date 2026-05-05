@@ -92,11 +92,15 @@ export interface SampleToolRecord {
   manualUrl?: string;
   /** When status is "out" or "overdue", who has it right now. */
   currentCustodian?: { name: string; phone?: string };
-  /** Optional purchase receipt — image or PDF. UI-only for the prototype. */
+  /** Optional purchase receipt — image or PDF. UI-only for the prototype.
+   * Shape mirrors `ReceiptFile` from `src/components/tools/ReceiptUpload.tsx`,
+   * with `file` optional so seeded records (which have no underlying File
+   * object) still satisfy the type. */
   receipt?: {
+    file?: File;
     name: string;
-    mimeType: string;
-    kind: "image" | "pdf";
+    size: number;
+    type: string;
     url: string;
   };
   /** When set, this tool is bundled into a Gang (a named kit/crew bundle). */
