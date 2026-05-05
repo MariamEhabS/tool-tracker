@@ -794,6 +794,8 @@ export default function CreateQRv2({ onBackToTypes }: CreateQRv2Props) {
                 <MoreDetails
                   tool={tool}
                   update={(k, v) => updateToolField(k, v)}
+                  onReceiptSelect={handleReceiptSelect}
+                  onReceiptRemove={handleReceiptRemove}
                 />
               )}
             </div>
@@ -1186,12 +1188,16 @@ function FlatSelect({
 function MoreDetails({
   tool,
   update,
+  onReceiptSelect,
+  onReceiptRemove,
 }: {
   tool: ToolFormState;
   update: <K extends keyof ToolFormState>(
     key: K,
     value: ToolFormState[K],
   ) => void;
+  onReceiptSelect: (receipt: ReceiptFile) => void;
+  onReceiptRemove: () => void;
 }) {
   return (
     <div className="mt-5 space-y-6" data-testid="v2-more-details-panel">
@@ -1285,8 +1291,8 @@ function MoreDetails({
           </FieldLabel>
           <ReceiptUpload
             receipt={tool.receipt ?? null}
-            onSelect={handleReceiptSelect}
-            onRemove={handleReceiptRemove}
+            onSelect={onReceiptSelect}
+            onRemove={onReceiptRemove}
             testIdPrefix="v2-tool-receipt"
           />
         </div>
