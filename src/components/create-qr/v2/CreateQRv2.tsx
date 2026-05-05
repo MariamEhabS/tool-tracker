@@ -35,16 +35,23 @@ import CreateProjectModal from "@/components/modal/taliho/CreateProjectModal";
 import { useAllProjects } from "@/api/endpoints/projects";
 import { canCreateProjects } from "@/utils/permissions";
 import { getStoredUser } from "@/utils/getStoredUser";
-import { SAMPLE_TOOL_CATEGORIES } from "@/data/seed/toolTrackerSeed";
+import {
+  SAMPLE_TOOL_CATEGORIES,
+  SAMPLE_TOOL_SEED,
+} from "@/data/seed/toolTrackerSeed";
 import { icons } from "@/lib/icons";
 import { createToolTrackers } from "@/api/stubs/toolTrackerStub";
 import type {
   CreateToolTrackersResponse,
   ToolInput,
+  ToolRetirement,
   ToolTrackerRules as RulesShape,
 } from "@/components/create-qr/toolTracker/types";
 import type { ProjectRow } from "@/components/create-qr/types";
 import ToolPhotoUpload from "@/components/create-qr/ConfigureView/ToolPhotoUpload";
+import ReceiptUpload, {
+  type ReceiptFile,
+} from "@/components/tools/ReceiptUpload";
 import ToolTrackerRulesEditor, {
   DEFAULT_RULES,
 } from "@/components/create-qr/ConfigureView/ToolTrackerRulesEditor";
@@ -117,25 +124,24 @@ const DEFAULT_CATEGORY = "Uncategorized";
 interface ToolFormState extends ToolInput {
   photoFile?: File | null;
   photoPreviewUrl?: string | null;
+  /** Set when the tool has been decommissioned via RetireToolModal. */
+  retirement?: ToolRetirement | null;
+  /** Optional purchase receipt (image or PDF). UI-only on the create form;
+   * not sent in the createToolTrackers payload. */
+  receipt?: ReceiptFile | null;
 }
 
+/**
+ * Prototype seed: form lands pre-populated with a realistic tool record so
+ * client demos don't open onto an empty form. Remove (or gate behind a dev
+ * flag) before this ships to real users.
+ */
 const INITIAL_TOOL: ToolFormState = {
-  name: "",
-  category: DEFAULT_CATEGORY,
-  serial: "",
-  homeLocation: "",
-  manufacturer: "",
-  model: "",
-  barcode: "",
-  description: "",
-  vendor: "",
-  purchaseDate: "",
-  purchasePrice: "",
-  warrantyDate: "",
-  productUrl: "",
-  manualUrl: "",
+  ...SAMPLE_TOOL_SEED,
   photoFile: null,
   photoPreviewUrl: null,
+  retirement: null,
+  receipt: null,
 };
 
 interface BulkRow {
@@ -183,7 +189,9 @@ export default function CreateQRv2({ onBackToTypes }: CreateQRv2Props) {
   // Code label is UI-only. Mirrors tool name as user types until they edit
   // the Code label manually, then mirroring stops and the field takes
   // ownership. On submit, each ToolInput.name = (codeLabel || toolName).
-  const [codeLabel, setCodeLabel] = useState("");
+  // Mirror the seeded tool name into the Code label so the demo lands with
+  // a fully populated form (mirroring still releases on first manual edit).
+  const [codeLabel, setCodeLabel] = useState(INITIAL_TOOL.name);
   const [codeLabelMirroring, setCodeLabelMirroring] = useState(true);
 
   const [showMore, setShowMore] = useState(false);
@@ -259,6 +267,28 @@ export default function CreateQRv2({ onBackToTypes }: CreateQRv2Props) {
       URL.revokeObjectURL(tool.photoPreviewUrl);
     }
     setTool((prev) => ({ ...prev, photoFile: null, photoPreviewUrl: null }));
+  };
+
+  // ─── Receipt upload — Single only (optional) ────────────────────────────
+  useEffect(() => {
+    const url = tool.receipt?.url;
+    return () => {
+      if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
+    };
+  }, [tool.receipt?.url]);
+
+  const handleReceiptSelect = (receipt: ReceiptFile) => {
+    if (tool.receipt?.url.startsWith("blob:")) {
+      URL.revokeObjectURL(tool.receipt.url);
+    }
+    setTool((prev) => ({ ...prev, receipt }));
+  };
+
+  const handleReceiptRemove = () => {
+    if (tool.receipt?.url.startsWith("blob:")) {
+      URL.revokeObjectURL(tool.receipt.url);
+    }
+    setTool((prev) => ({ ...prev, receipt: null }));
   };
 
   // ─── Tool name + Code label mirror ──────────────────────────────────────
@@ -424,10 +454,14 @@ export default function CreateQRv2({ onBackToTypes }: CreateQRv2Props) {
       const {
         photoFile: _photoFile,
         photoPreviewUrl: _photoPreviewUrl,
+        receipt: _receipt,
+        retirement: _retirement,
         ...rest
       } = tool;
       void _photoFile;
       void _photoPreviewUrl;
+      void _receipt;
+      void _retirement;
       return [{ ...rest, name: finalName }];
     }
     // Bulk — payload depends on the active input method.
@@ -646,6 +680,34 @@ export default function CreateQRv2({ onBackToTypes }: CreateQRv2Props) {
       </div>
 
       <div className="max-w-4xl w-full mx-auto space-y-5">
+        <div
+          className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900"
+          data-testid="v2-tool-create-note"
+        >
+          <i
+            className="bx bx-info-circle text-blue-600 text-xl mt-0.5 shrink-0"
+            aria-hidden
+          />
+          <div className="min-w-0">
+            <div className="font-medium">
+              {mode === "single"
+                ? "This page creates one tool at a time."
+                : "Creating a batch of tools at once."}
+            </div>
+            <div className="text-xs text-blue-800 mt-0.5">
+              Once tools exist, head to{" "}
+              <a
+                href="/tools"
+                className="font-semibold underline underline-offset-2 hover:text-blue-950"
+              >
+                Tools
+              </a>{" "}
+              to combine them into a <strong>gang</strong> (a kit/crew bundle)
+              for batch check-out, project moves, and reporting.
+            </div>
+          </div>
+        </div>
+
         {mode === "single" ? (
           <SectionCard
             title="Tool details"
@@ -1212,6 +1274,20 @@ function MoreDetails({
             value={tool.warrantyDate ?? ""}
             onChange={(v) => update("warrantyDate", v)}
             testId="v2-tool-warranty-date"
+          />
+        </div>
+        <div className="mt-4">
+          <FieldLabel>
+            Receipt{" "}
+            <span className="text-xs font-normal text-gray-400">
+              (optional)
+            </span>
+          </FieldLabel>
+          <ReceiptUpload
+            receipt={tool.receipt ?? null}
+            onSelect={handleReceiptSelect}
+            onRemove={handleReceiptRemove}
+            testIdPrefix="v2-tool-receipt"
           />
         </div>
       </SubSection>

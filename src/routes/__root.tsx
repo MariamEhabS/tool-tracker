@@ -47,7 +47,7 @@ import { Toast } from "@/utils/toaster/toast";
 import NotFoundPage from "@/components/ui/NotFoundPage";
 import ErrorPage from "@/components/ui/ErrorPage";
 import { parseHttpError } from "@/utils/httpErrors";
-import { StorageWarningBanner, TrialBanner } from "@/components/upgrade";
+import { StorageWarningBanner } from "@/components/upgrade";
 import { useStorageLimits, useTier } from "@/lib/tiers";
 import { isAdminUser } from "@/lib/adminWhitelist";
 import { DevOverrideProvider } from "@/lib/devOverride";
@@ -414,7 +414,10 @@ function RootComponent() {
   const currentPath = routerState.location.pathname;
   const isMobileFocusedRoute =
     currentPath === "/scannedQR" ||
-    currentPath.includes("/tools") ||
+    // Only the public per-tool item pages (/tools/:tool/:itemId) are
+    // mobile-focused. The bare /tools listing is a desktop app page that
+    // keeps the sidebar.
+    currentPath.startsWith("/tools/") ||
     currentPath.startsWith("/nfc/") ||
     currentPath.startsWith("/ball-in-court/") ||
     currentPath.startsWith("/task-signoff/");
@@ -762,13 +765,6 @@ function RootComponent() {
               >
                 <Outlet />
               </main>
-              {/* Subscription Banner */}
-              <TrialBanner
-                onUpgrade={handleUpgradePlan}
-                onResubscribe={handleUpgradePlan}
-                onDismiss={() => {}}
-                isUpgrading={startingSubscription}
-              />
               {/* Storage Warning Banner */}
               {!storageWarningDismissed &&
                 (storageLimits.isWarning || storageLimits.isCritical) && (

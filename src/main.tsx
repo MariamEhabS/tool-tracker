@@ -24,7 +24,13 @@ if (STATIC_APP_MODE) {
   installStaticFetchMock();
 }
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree,
+  // Preload route chunks when the user hovers a Link, so clicking the
+  // sidebar doesn't show a brief blank flash while the lazy chunk loads.
+  defaultPreload: "intent",
+  defaultPreloadDelay: 50,
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

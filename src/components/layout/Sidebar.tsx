@@ -23,6 +23,7 @@ export default function Sidebar() {
     { to: "/create-qr", label: "Create QR", icon: "bx bx-qr" },
     { to: "/projects", label: "Projects", icon: "bx bx-folder" },
     { to: "/my-qrcodes", label: "QR Codes", icon: "bx bx-qr-scan" },
+    { to: "/tools", label: "Tools", icon: "bx bx-wrench" },
     {
       to: "/groups",
       label: "Groups",

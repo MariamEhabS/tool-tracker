@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, DragEvent } from "react";
 import toast from "react-hot-toast";
+import Modal from "@/components/modal/Modal";
 
 /**
  * Thin local photo upload for the Tool Tracker single form.
@@ -40,6 +41,8 @@ export default function ToolPhotoUpload(props: ToolPhotoUploadProps) {
   const { previewUrl, onFileSelect, onRemove, disabled = false } = props;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasError, setHasError] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const handleFile = useCallback(
     (file: File) => {
@@ -55,11 +58,20 @@ export default function ToolPhotoUpload(props: ToolPhotoUploadProps) {
     [onFileSelect],
   );
 
-  const handleClick = useCallback(() => {
+  const openPicker = useCallback(() => {
     if (!disabled && fileInputRef.current) {
       fileInputRef.current.click();
     }
   }, [disabled]);
+
+  const handleTileClick = useCallback(() => {
+    if (disabled) return;
+    if (previewUrl && !hasError) {
+      setIsPreviewOpen(true);
+    } else {
+      openPicker();
+    }
+  }, [disabled, previewUrl, hasError, openPicker]);
 
   const handleFileChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -75,10 +87,52 @@ export default function ToolPhotoUpload(props: ToolPhotoUploadProps) {
     [handleFile],
   );
 
-  const tileLabel = previewUrl ? "Replace photo" : "Add photo";
+  const handleDragEnter = useCallback(
+    (e: DragEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disabled) setIsDragging(true);
+    },
+    [disabled],
+  );
+
+  const handleDragLeave = useCallback((e: DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback(
+    (e: DragEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disabled) setIsDragging(true);
+    },
+    [disabled],
+  );
+
+  const handleDrop = useCallback(
+    (e: DragEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      if (disabled) return;
+      const file = e.dataTransfer?.files?.[0];
+      if (file) handleFile(file);
+    },
+    [disabled, handleFile],
+  );
+
+  const hasPreview = !!previewUrl && !hasError;
+  const tileLabel = hasPreview
+    ? "View photo"
+    : previewUrl
+      ? "Replace photo"
+      : "Add photo";
   const buttonLabel = previewUrl ? "Replace photo" : "Upload photo";
 
   return (
+    <>
     <div className="flex items-center gap-3" data-testid="tool-photo-upload">
       <input
         ref={fileInputRef}
@@ -91,15 +145,24 @@ export default function ToolPhotoUpload(props: ToolPhotoUploadProps) {
       />
       <button
         type="button"
-        onClick={handleClick}
+        onClick={handleTileClick}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
         aria-label={tileLabel}
+        title={hasPreview ? "Click to view larger" : undefined}
         disabled={disabled}
         className={`group shrink-0 h-16 w-16 rounded-lg border-2 border-dashed transition overflow-hidden flex items-center justify-center ${
-          previewUrl
-            ? "border-transparent"
-            : disabled
-              ? "border-gray-200 bg-gray-50 cursor-not-allowed"
-              : "border-gray-300 bg-gray-50 hover:border-brand-400 hover:bg-brand-50/40 cursor-pointer"
+          isDragging && !disabled
+            ? "border-brand-500 bg-brand-50 ring-2 ring-brand-200"
+            : hasPreview
+              ? disabled
+                ? "border-transparent cursor-not-allowed"
+                : "border-transparent cursor-zoom-in hover:ring-2 hover:ring-brand-300"
+              : disabled
+                ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+                : "border-gray-300 bg-gray-50 hover:border-brand-400 hover:bg-brand-50/40 cursor-pointer"
         }`}
       >
         {previewUrl && !hasError ? (
@@ -117,7 +180,7 @@ export default function ToolPhotoUpload(props: ToolPhotoUploadProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleClick}
+            onClick={openPicker}
             disabled={disabled}
             className="text-sm font-medium text-gray-700 hover:text-gray-900 inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="tool-photo-upload-button"
@@ -125,6 +188,9 @@ export default function ToolPhotoUpload(props: ToolPhotoUploadProps) {
             <i className="bx bx-upload text-sm" />
             {buttonLabel}
           </button>
+          <span className="text-xs text-gray-500" data-testid="tool-photo-drop-hint">
+            or drag &amp; drop
+          </span>
           {previewUrl && (
             <button
               type="button"
@@ -144,5 +210,24 @@ export default function ToolPhotoUpload(props: ToolPhotoUploadProps) {
         </p>
       </div>
     </div>
+    {hasPreview && (
+      <Modal
+        open={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title="Tool photo"
+        size="lg"
+        withoutPadding
+      >
+        <div className="flex items-center justify-center bg-gray-900">
+          <img
+            src={previewUrl ?? ""}
+            alt="Tool photo preview"
+            className="max-h-[70vh] w-auto max-w-full object-contain"
+            data-testid="tool-photo-preview-modal-image"
+          />
+        </div>
+      </Modal>
+    )}
+    </>
   );
 }

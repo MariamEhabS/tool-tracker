@@ -9,7 +9,21 @@ export type ToolTrackerLoanPeriod = "4h" | "1d" | "3d" | "1w" | "custom";
 
 export type ToolTrackerPinMode = "smart" | "custom";
 
-export type ToolTrackerStatus = "available" | "out" | "overdue";
+export type ToolTrackerStatus = "available" | "out" | "overdue" | "retired";
+
+export type ToolRetirementReason =
+  | "broken"
+  | "lost"
+  | "sold"
+  | "scrapped"
+  | "other";
+
+export interface ToolRetirement {
+  reason: ToolRetirementReason;
+  /** ISO 8601 date string (YYYY-MM-DD). */
+  retiredAt: string;
+  notes?: string;
+}
 
 export interface ToolTrackerRules {
   identification: ToolTrackerIdentification;
@@ -29,12 +43,20 @@ export interface ToolTrackerPhoto {
   mediaUrl: string;
 }
 
+export interface ToolAssignedStaff {
+  name: string;
+  phone?: string;
+}
+
 export interface ToolInput {
   name: string;
   category?: string;
   serial?: string;
   homeLocation?: string;
   photo?: ToolTrackerPhoto;
+  /** Staff member who owns this tool's kit. Distinct from `currentCustodian`,
+   * which is whoever has it signed out *right now*. */
+  assignedTo?: ToolAssignedStaff;
   // Granular fields (single-tool form only):
   manufacturer?: string;
   model?: string;
@@ -77,6 +99,8 @@ export interface ToolTracker {
   updatedAt: string;
   /** True if the PM has retired the tool (Stage 7 ToolNoLongerActive). */
   disabled?: boolean;
+  /** Set when the tool has been decommissioned. Preserves history per Stage 7. */
+  retirement?: ToolRetirement;
 }
 
 export interface ToolHistoryGps {
