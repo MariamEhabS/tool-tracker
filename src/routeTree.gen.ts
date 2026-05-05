@@ -35,7 +35,6 @@ import { Route as NfcV1NfcIdImport } from './routes/nfc.v1.$nfcId'
 // Create Virtual Routes
 
 const VerifyEmailLazyImport = createFileRoute('/verify-email')()
-const ToolsLazyImport = createFileRoute('/tools')()
 const SignupLazyImport = createFileRoute('/signup')()
 const SettingsLazyImport = createFileRoute('/settings')()
 const SampleLazyImport = createFileRoute('/sample')()
@@ -64,12 +63,6 @@ const VerifyEmailLazyRoute = VerifyEmailLazyImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/verify-email.lazy').then((d) => d.Route))
-
-const ToolsLazyRoute = ToolsLazyImport.update({
-  id: '/tools',
-  path: '/tools',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/tools.lazy').then((d) => d.Route))
 
 const SignupLazyRoute = SignupLazyImport.update({
   id: '/signup',
@@ -281,9 +274,9 @@ const AdminCustomersCompanyIdLazyRoute =
   )
 
 const ToolsToolItemIdRoute = ToolsToolItemIdImport.update({
-  id: '/$tool/$itemId',
-  path: '/$tool/$itemId',
-  getParentRoute: () => ToolsLazyRoute,
+  id: '/tools/$tool/$itemId',
+  path: '/tools/$tool/$itemId',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const OauthProcoreLoginRoute = OauthProcoreLoginImport.update({
@@ -390,13 +383,6 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupLazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/tools': {
-      id: '/tools'
-      path: '/tools'
-      fullPath: '/tools'
-      preLoaderRoute: typeof ToolsLazyImport
       parentRoute: typeof rootRoute
     }
     '/verify-email': {
@@ -555,10 +541,10 @@ declare module '@tanstack/react-router' {
     }
     '/tools/$tool/$itemId': {
       id: '/tools/$tool/$itemId'
-      path: '/$tool/$itemId'
+      path: '/tools/$tool/$itemId'
       fullPath: '/tools/$tool/$itemId'
       preLoaderRoute: typeof ToolsToolItemIdImport
-      parentRoute: typeof ToolsLazyImport
+      parentRoute: typeof rootRoute
     }
     '/admin/customers/$companyId': {
       id: '/admin/customers/$companyId'
@@ -578,18 +564,6 @@ declare module '@tanstack/react-router' {
 }
 
 // Create and export the route tree
-
-interface ToolsLazyRouteChildren {
-  ToolsToolItemIdRoute: typeof ToolsToolItemIdRoute
-}
-
-const ToolsLazyRouteChildren: ToolsLazyRouteChildren = {
-  ToolsToolItemIdRoute: ToolsToolItemIdRoute,
-}
-
-const ToolsLazyRouteWithChildren = ToolsLazyRoute._addFileChildren(
-  ToolsLazyRouteChildren,
-)
 
 interface VerifyEmailLazyRouteChildren {
   VerifyEmailTokenLazyRoute: typeof VerifyEmailTokenLazyRoute
@@ -630,7 +604,6 @@ export interface FileRoutesByFullPath {
   '/sample': typeof SampleLazyRoute
   '/settings': typeof SettingsLazyRoute
   '/signup': typeof SignupLazyRoute
-  '/tools': typeof ToolsLazyRouteWithChildren
   '/verify-email': typeof VerifyEmailLazyRouteWithChildren
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/ball-in-court/$workflowId': typeof BallInCourtWorkflowIdRoute
@@ -671,7 +644,6 @@ export interface FileRoutesByTo {
   '/sample': typeof SampleLazyRoute
   '/settings': typeof SettingsLazyRoute
   '/signup': typeof SignupLazyRoute
-  '/tools': typeof ToolsLazyRouteWithChildren
   '/verify-email': typeof VerifyEmailLazyRouteWithChildren
   '/ball-in-court/$workflowId': typeof BallInCourtWorkflowIdRoute
   '/group/$groupId': typeof GroupGroupIdRoute
@@ -712,7 +684,6 @@ export interface FileRoutesById {
   '/sample': typeof SampleLazyRoute
   '/settings': typeof SettingsLazyRoute
   '/signup': typeof SignupLazyRoute
-  '/tools': typeof ToolsLazyRouteWithChildren
   '/verify-email': typeof VerifyEmailLazyRouteWithChildren
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/ball-in-court/$workflowId': typeof BallInCourtWorkflowIdRoute
@@ -755,7 +726,6 @@ export interface FileRouteTypes {
     | '/sample'
     | '/settings'
     | '/signup'
-    | '/tools'
     | '/verify-email'
     | '/admin/customers'
     | '/ball-in-court/$workflowId'
@@ -795,7 +765,6 @@ export interface FileRouteTypes {
     | '/sample'
     | '/settings'
     | '/signup'
-    | '/tools'
     | '/verify-email'
     | '/ball-in-court/$workflowId'
     | '/group/$groupId'
@@ -834,7 +803,6 @@ export interface FileRouteTypes {
     | '/sample'
     | '/settings'
     | '/signup'
-    | '/tools'
     | '/verify-email'
     | '/admin/customers'
     | '/ball-in-court/$workflowId'
@@ -876,7 +844,6 @@ export interface RootRouteChildren {
   SampleLazyRoute: typeof SampleLazyRoute
   SettingsLazyRoute: typeof SettingsLazyRoute
   SignupLazyRoute: typeof SignupLazyRoute
-  ToolsLazyRoute: typeof ToolsLazyRouteWithChildren
   VerifyEmailLazyRoute: typeof VerifyEmailLazyRouteWithChildren
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   BallInCourtWorkflowIdRoute: typeof BallInCourtWorkflowIdRoute
@@ -898,6 +865,7 @@ export interface RootRouteChildren {
   NfcV1NfcIdRoute: typeof NfcV1NfcIdRoute
   OauthProcoreCallbackRoute: typeof OauthProcoreCallbackRoute
   OauthProcoreLoginRoute: typeof OauthProcoreLoginRoute
+  ToolsToolItemIdRoute: typeof ToolsToolItemIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -913,7 +881,6 @@ const rootRouteChildren: RootRouteChildren = {
   SampleLazyRoute: SampleLazyRoute,
   SettingsLazyRoute: SettingsLazyRoute,
   SignupLazyRoute: SignupLazyRoute,
-  ToolsLazyRoute: ToolsLazyRouteWithChildren,
   VerifyEmailLazyRoute: VerifyEmailLazyRouteWithChildren,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   BallInCourtWorkflowIdRoute: BallInCourtWorkflowIdRoute,
@@ -935,6 +902,7 @@ const rootRouteChildren: RootRouteChildren = {
   NfcV1NfcIdRoute: NfcV1NfcIdRoute,
   OauthProcoreCallbackRoute: OauthProcoreCallbackRoute,
   OauthProcoreLoginRoute: OauthProcoreLoginRoute,
+  ToolsToolItemIdRoute: ToolsToolItemIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -959,7 +927,6 @@ export const routeTree = rootRoute
         "/sample",
         "/settings",
         "/signup",
-        "/tools",
         "/verify-email",
         "/admin/customers",
         "/ball-in-court/$workflowId",
@@ -980,7 +947,8 @@ export const routeTree = rootRoute
         "/dashboard/",
         "/nfc/v1/$nfcId",
         "/oauth/procore/callback",
-        "/oauth/procore/login"
+        "/oauth/procore/login",
+        "/tools/$tool/$itemId"
       ]
     },
     "/": {
@@ -1018,12 +986,6 @@ export const routeTree = rootRoute
     },
     "/signup": {
       "filePath": "signup.lazy.tsx"
-    },
-    "/tools": {
-      "filePath": "tools.lazy.tsx",
-      "children": [
-        "/tools/$tool/$itemId"
-      ]
     },
     "/verify-email": {
       "filePath": "verify-email.lazy.tsx",
@@ -1100,8 +1062,7 @@ export const routeTree = rootRoute
       "filePath": "oauth/procore/login.tsx"
     },
     "/tools/$tool/$itemId": {
-      "filePath": "tools.$tool.$itemId.tsx",
-      "parent": "/tools"
+      "filePath": "tools.$tool.$itemId.tsx"
     },
     "/admin/customers/$companyId": {
       "filePath": "admin.customers.$companyId.lazy.tsx",
